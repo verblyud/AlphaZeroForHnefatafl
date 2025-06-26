@@ -376,73 +376,34 @@ fn generate_search_policy(mut visit_counts: Vec<f32>, temperature: f32) -> Vec<f
 
 fn model_predict(game: &Game, game_history:VecDeque<Game> ,nnmodel: &CModule) -> (Vec<f32>, f32) {
 
+
     // Preparing input Tensors
-    let current_player = match game.current_player().chip_options[0] {
+    // let matrix_representation = board_to_matrix(game_state);
+    let matrix_representation: Vec<Vec<f32>> = con4_board_to_matrix(game)
+    .iter()
+    .map(|row| row.iter().map(|&x| x as f32).collect())
+    .collect();
+
+    // Preparing input Tensors
+    let player = match game.current_player().chip_options[0] {
         RED_CHIP => 1, // Red
         YELLOW_CHIP => -1, // Yellow
         _ => panic!("Invalid player chip option"),
     };
 
-    // Create a vector to hold all board states (current + history)
-    let mut all_game_states = Vec::new();
+ 
+    let board = Tensor::from_slice2(&matrix_representation); //Assuming game.state is a 2-dimensional vector
+    let cond: [bool; 1] = if player == 1 {[true]} else {[false]};
+    let cond: Tensor = Tensor::from_slice(&cond);
+
+    // Run the inference using the nnmodel
+    // let input = IValue::Tuple(vec![IValue::Tensor(board), IValue::Tensor(cond)]);
+    // let output = nnmodel.forward_is(&[input]);
     
-    // Add current game state first (X_t)
-    all_game_states.push(game.clone());
-
-    // Add historical states in reverse order (X_t-1, X_t-2, ..., X_t-7)
-    for historical_game in game_history.iter().rev() {
-        all_game_states.push(historical_game.clone());
-        if all_game_states.len() >= 8 {
-            break; // Only take the last 8 states
-        }
-    }
-
-    // Create board representations for each state
-    let mut all_boards = Vec::new();
-    
-    for game_state in &all_game_states {
-        // Get board from current player's perspective
-        let matrix_x = con4_board_to_matrix_perspective(game_state,current_player);
-        // Get board from opponent's perspective  
-        let matrix_y = con4_board_to_matrix_perspective(game_state,current_player);
-        
-        all_boards.push(matrix_x);
-        all_boards.push(matrix_y);
-    }
-
-    // Pad with zeros if we have fewer than 8 states
-    while all_boards.len() < 16 { // 8 states * 2 perspectives = 16 boards
-        let empty_board = vec![vec![0.0f32; 7]; 6]; // 6x7 board of zeros
-        all_boards.push(empty_board);
-    }
-
-
-        // Convert to tensor format: [batch_size, channels, height, width]
-    // where channels = 16 (8 timesteps * 2 perspectives)
-    let tensor_data: Vec<f32> = all_boards
-        .into_iter()
-        .flatten()
-        .flatten()
-        .collect();
-    
-    // Reshape to [1, 16, 6, 7] - batch_size=1, channels=16, height=6, width=7
-    let board_tensor = Tensor::from_slice(&tensor_data)
-        .view([1, 16, 6, 7]);
-
-
-    // Create condition tensor
-    let cond_value = if current_player == 1 { 0.0f32 } else { 1.0f32 };
-    let cond_data: Vec<f32> = vec![cond_value; 1 * 1 * 6 * 7]; // 42 elements
-    let cond_tensor = Tensor::from_slice(&cond_data).view([1, 1, 6, 7]);
-    
-    // Move to device
     let device = if tch::Cuda::is_available() { Device::Cuda(0) } else { Device::Cpu };
-    let board_tensor = board_tensor.to_device(device);
-    let cond_tensor = cond_tensor.to_device(device);
-    
-    // Run inference
-    let output = nnmodel.forward_is(&[IValue::Tensor(board_tensor), IValue::Tensor(cond_tensor)]);
-
+    let board = board.to_device(device);
+    let cond = cond.to_device(device);
+    let output = nnmodel.forward_is(&[IValue::Tensor(board), IValue::Tensor(cond)]);
     let (log_prob, value) = match output {
         Ok(IValue::Tuple(output)) => {
             if output.len() != 2 {
@@ -542,6 +503,42 @@ pub fn con4_board_to_matrix_perspective(game: &Game, player:i32) -> Vec<Vec<f32>
 }
 
 
+
+pub fn con4_board_to_matrix(game: &Game) -> Vec<Vec<i8>> {
+
+    let layout = game.get_board_layout();
+
+    let rows = 6;
+    let cols = 7;
+
+    // Initialize a 6x7 matrix filled with zeros
+    let mut matrix = vec![vec![0; cols]; rows];
+
+    // Ensure we don't exceed the layout bounds
+    let max_index = std::cmp::min(layout.len(), rows * cols);
+
+    // Iterate over the layout vector with bounds checking
+    for index in 0..max_index {
+        if let Some(chip) = &layout[index] {
+            // Calculate the column (x) and row (y) based on the index
+            let x = index % cols; // Column index
+            let y = rows - 1 - (index / cols); // Row index (bottom to top)
+
+            // Additional bounds checking to prevent panic
+            if y < rows && x < cols {
+                // Assign values to the matrix based on fg_color
+                // 1 for red who go first, -1 for yellow who goes second
+                if chip.fg_color == 1 {
+                    matrix[y][x] = 1;
+                } else if chip.fg_color == 3 {
+                    matrix[y][x] = -1;
+                }
+            }
+        }
+    }
+
+    matrix
+}
 
 
 
