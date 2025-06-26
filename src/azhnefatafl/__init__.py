@@ -9,4 +9,4 @@ from .config import Game, Args
 # from azhnefatafl._azhnefatafl import self_play_function 
 # will fail.  30.01.2025 Keigo
 
-from ._azhnefatafl import self_play_function
+from ._azhnefatafl import con4_self_play_function

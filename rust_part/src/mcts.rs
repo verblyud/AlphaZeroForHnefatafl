@@ -61,7 +61,7 @@ impl Node{
         let q = self.action_qs.get(action).unwrap();
         let count = self.action_counts.get(action).unwrap();
         let p = self.action_probs.get(action).unwrap();
-        return *q + C_PUCT * *p * self.visits.sqrt() / (1.0 + *count);
+        return *q + C_PUCT * *p * (self.visits.ln() / (1.0 + *count)).sqrt();
     }
 
 }
@@ -123,7 +123,7 @@ fn search<T: BoardState>(game_state: GameState<T>, node: &mut Node, nnmodel: &CM
 
     if let Some(q) = node.action_qs.get_mut(action) {
         if let Some(count) = node.action_counts.get(action) {
-            *q = (*count * *q + reward) / (*count + 1.0);
+            *q = (*count * *q + reward) / (*count + 1.0); //dangerous spot
         }
     }
 

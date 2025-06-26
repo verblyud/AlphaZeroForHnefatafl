@@ -1,19 +1,19 @@
 import torch
 
 Game = {
-    'boardsize' : (7, 7),
-    'actionsize' : 49 * 49,
+    'boardsize' : (6, 7),
+    'actionsize' : 7,
 }
 
 Args = {
     'lr': 0.2,
     'dropout': 0.3,
-    'epochs': 10,
+    'epochs': 1,
     'batch_size': 64,
     'cuda': torch.cuda.is_available(),
     'num_channels': 512,
     'maxlen': 50000,
-    'numGamesPerGen': 100,
+    'numGamesPerGen': 1,
     'mcts': 400,
     'mcts_alg': "mcts_par_mcts_root_par",
     'num_workers': 8,

@@ -13,6 +13,7 @@ use crate::hnefgame::board::state::BoardState;
 use crate::mcts::mcts;
 use crate::support::{action_to_str, board_to_matrix, get_ai_play,write_to_file};
 use crate::mcts_cmp::{MCTSAlg, mcts_do_alg};
+use crate::mcts_rewritten;
 
 use rand::prelude::*;
 use rand::thread_rng;

@@ -58,7 +58,14 @@ def func2():
     wrapper = azh.load_wrapper(agentname)
     wrapper.learn(verbose=verbose, maxgen=maxgen)
 
+
+
+
+
+# Main function to start the program
 user_input = input("Welcome! If you want to train a model from a scratch, press 1.\n If you want to pick an agent and continue from the last checkpoint, press 2.")
+
+
 while True:
     if user_input == '1':
         func1()

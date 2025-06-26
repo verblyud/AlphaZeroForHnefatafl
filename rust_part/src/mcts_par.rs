@@ -114,7 +114,7 @@ impl Notr{
         let q = self.action_qs.get(action).unwrap();
         let count = self.action_counts.get(action).unwrap();
         let p = self.action_probs.get(action).unwrap();
-        return *q + c_puct * p * self.visits.sqrt() / (1.0 + *count);
+        return *q + c_puct * p * (self.visits.ln() / (1.0 + *count)).sqrt();
     }
 
     pub fn display_info(&self) {

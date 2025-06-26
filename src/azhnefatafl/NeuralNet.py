@@ -16,7 +16,11 @@ import csv
 
 from .utils import *
 from .taflNNet import TaflNNet
-from ._azhnefatafl import self_play_function
+
+
+
+
+from ._azhnefatafl import con4_self_play_function
 
 # args = {
 #     'lr': 0.001,
@@ -207,7 +211,25 @@ class NNetWrapper():
         for _ in t:
             t.set_description(f"Iteration: {_ + 1}\n")
             # Generate new training examples using self-play
-            new_examples = self_play_function(model_path, 1, self.args['mcts'], verbose, self.args['mcts_alg'], self.args['num_workers'], self.args['c_puct'], self.args['alpha'], self.args['eps'])
+
+
+
+
+
+
+
+
+        ###############################################
+        ############################################### This is where the self-play function for each game is specified
+        ###############################################
+
+
+
+            logger_path = self.logpath
+
+            new_examples = con4_self_play_function(model_path, 1, self.args['mcts'], verbose, self.args['num_workers'], self.args['c_puct'], self.args['alpha'], self.args['eps'],logger_path)
+
+            # new_examples = con4_self_play_function(model_path, 1, self.args['mcts'], verbose, self.args['mcts_alg'], self.args['num_workers'], self.args['c_puct'], self.args['alpha'], self.args['eps'])
             # add the new_examples to the right side of the deque (if length exceeds the maxlen, it will discard older examples from the left)
             train_examples.extend(new_examples)
 

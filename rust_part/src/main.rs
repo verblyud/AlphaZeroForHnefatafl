@@ -9,6 +9,12 @@ pub mod hnefgame;
 pub mod mcts_par;
 pub mod mcts_cmp;
 
+pub mod con4_play;
+pub mod con4_mcts;
+pub mod connect4game;
+pub mod mcts_rewritten;
+
+
 use hnefgame::game::{Game, SmallBasicGame};
 use hnefgame::game::GameOutcome::{Draw, Win};
 use hnefgame::game::GameStatus::Over;
